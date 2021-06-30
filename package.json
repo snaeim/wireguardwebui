@@ -1,0 +1,25 @@
+{
+  "name": "wireguard-webui",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www",
+    "devstart": "DEBUG=wireguard-webui:* nodemon --ignore 'db.json' ./bin/www"
+  },
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "ejs": "~2.6.1",
+    "express": "~4.16.1",
+    "http-errors": "~1.6.3",
+    "is-cidr": "^4.0.2",
+    "lodash": "^4.17.21",
+    "lowdb": "^1.0.0",
+    "morgan": "~1.9.1",
+    "netmask": "^2.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}
