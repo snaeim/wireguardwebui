@@ -1,0 +1,36 @@
+<%- include('header'); -%> <%- include('navbar'); -%>
+<section class="section">
+  <div class="container">
+    <div class="columns">
+      <div class="column is-offset-one-third is-one-third">
+        <% if (locals.firstLogin) { %>
+        <article class="message is-primary is-small">
+          <div class="message-body">Enter password for create admin account</div>
+        </article>
+        <% } %> <% if (locals.err) { %>
+        <article class="message is-danger is-small">
+          <div class="message-body"><%= err %></div>
+        </article>
+        <% } %> <% if (locals.alreadyLoggedin) { %>
+        <article class="message is-danger is-small">
+          <div class="message-body">You already logged in as Admin!</div>
+        </article>
+        <% } %>
+
+        <form class="box" method="POST" action="/admin/login">
+          <fieldset <% if (locals.alreadyLoggedin) { %>
+            <%= 'disabled' %><% } %>>
+            <div class="field">
+              <label class="label">Password</label>
+              <div class="control">
+                <input class="input" type="password" name="password" placeholder="********" required />
+              </div>
+            </div>
+            <button class="button is-primary">Login</button>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+<%- include('footer'); -%>
