@@ -63,6 +63,8 @@ router.post("/create", function (req, res, next) {
         publicKey: req.body.publicKey,
         postUp: req.body.postup,
         postDown: req.body.postdown,
+        enable: false,
+        peers: [],
       })
       .write();
     res.redirect("/interface/edit/" + req.body.name);
