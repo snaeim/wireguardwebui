@@ -1,1 +1,30 @@
-<%- include('header'); -%> <%- include('navbar'); -%> <%- include('footer'); -%>
+<%- include('header'); -%> <%- include('navbar'); -%>
+
+<section class="section">
+  <div class="container">
+    <div class="columns">
+      <div class="column is-offset-one-fifth is-three-fifths">
+        <% interfaces.forEach(function(interface){ %>
+
+        <div class="box">
+          <div class="columns">
+            <div class="column is-one-fifth has-text-centered <%= interface.enable === true ? 'enabled-interface' : 'disabled-interface' %>">
+              <p class="m-5"><span class="material-icons">link</span></p>
+              <strong><%= interface.name %></strong>
+            </div>
+            <div class="column is-clipped" style="white-space: nowrap">
+              <p><strong>Address: </strong><%= interface.address %></p>
+              <p><strong>Port: </strong><%= interface.port %></p>
+              <p><strong>Public Key: </strong><%= interface.publickey %></p>
+              <a class="button is-small mt-3" href="/interface/edit/<%= interface.name %>">Edit</a>
+            </div>
+          </div>
+        </div>
+
+        <% }); %>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('footer'); -%>
