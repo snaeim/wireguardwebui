@@ -9,10 +9,24 @@
           <div class="message-body"><%= err %></div>
         </article>
         <% } %>
+        <p>Before upload config file make sure is valid</p>
+        <p>Example of wireguard config file</p>
+        <pre class="my-6">
+[Interface]
+Address = 10.10.10.1/25
+PostUp = iptables -A FORWARD -s 10.10.10.0/24 -j ACCEPT
+PostDown = iptables -D FORWARD -s 10.10.10.0/24 -j ACCEPT
+ListenPort = 51820
+PrivateKey = ZW71TDHY143zgfHERCn0mp+rNsdSn/7IxmVhEkZSN1O=
+
+[Peer]
+PublicKey = SfyiKpCJyd4Q8AlfSgbyB08F/p/29OOzJd5BefCsOiU=
+AllowedIPs = 10.10.10.2/32
+        </pre>
         <form action="" method="POST" enctype="multipart/form-data">
           <div class="file is-centered is-large is-boxed">
             <label class="file-label">
-              <input class="file-input" type="file" name="configFile" />
+              <input class="file-input" type="file" accept=".conf" name="configFile" />
               <span class="file-cta">
                 <span class="file-icon">
                   <span class="material-icons"> file_upload </span>
