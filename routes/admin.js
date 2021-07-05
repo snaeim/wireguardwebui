@@ -65,9 +65,7 @@ router.post("/login", function (req, res, next) {
     const token = require("crypto").randomBytes(32).toString("hex");
 
     // write to db
-    db.set("admin.password", hashedPassword).value();
-    db.set("admin.token", token).value();
-    db.write();
+    db.set("admin", { password: hashedPassword, token: token }).write();
 
     // set token to cookies n redirect to homepage
     res.cookie("ADMIN_TOKEN", token).redirect("/");

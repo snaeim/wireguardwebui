@@ -13,6 +13,9 @@ db.defaults({ admin: {}, interfaces: [] }).write();
 
 /* GET home page. */
 router.get("/", function (req, res, next) {
+  // updating db state
+  db.read();
+
   let interfaces = db.get("interfaces").sortBy("name").value();
   res.render("index", { interfaces: interfaces });
 });

@@ -1,0 +1,211 @@
+<%- include('header'); -%> <%- include('navbar'); -%>
+
+<section class="section">
+  <div class="container">
+    <% if(locals.err) { %>
+    <article class="message is-danger is-small">
+      <div class="message-body">
+        <% err.forEach(item=>{ %>
+        <p><%= item %></p>
+        <% }); %>
+      </div>
+    </article>
+    <% } %>
+
+    <form action="<%= locals.action === 'create' ? '/interface/create' : '' %>" class="box" method="POST">
+      <div id="interface">
+        <h3 class="title is-3">Interface</h3>
+
+        <div class="columns">
+          <div class="column">
+            <div class="field">
+              <label class="label">Name</label>
+              <div class="control">
+                <input class="input" name="name" type="text" value="<%= interface.name %>" placeholder="wg0" required />
+              </div>
+              <p class="help">choose simple and wisely name like wg0.</p>
+            </div>
+          </div>
+          <div class="column">
+            <div class="field">
+              <label class="label">Description</label>
+              <div class="control">
+                <input class="input" name="desc" type="text" value="<%= interface.desc %>" placeholder="Home network" required />
+              </div>
+              <p class="help">Description is short explanation, it's just for your inforamtion.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="columns">
+          <div class="column">
+            <div class="field">
+              <label class="label">Address</label>
+              <div class="control">
+                <input class="input" name="address" type="text" value="<%= interface.address %>" placeholder="10.10.10.1/24" required />
+              </div>
+              <p class="help">Enter a CIDR in private IP address.</p>
+            </div>
+          </div>
+          <div class="column">
+            <div class="field">
+              <label class="label">Port</label>
+              <div class="control">
+                <input class="input" name="port" type="text" value="<%= interface.port %>" placeholder="51820" required />
+              </div>
+              <p class="help">Enter a free port on your host for listening interface traffic.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="columns">
+          <div class="column">
+            <div class="field">
+              <label class="label">Private Key</label>
+              <div class="control">
+                <input class="input" name="privateKey" type="text" value="<%= interface.privateKey %>" readonly required />
+              </div>
+              <p class="help">it's generate automaticly from your host don't change it.</p>
+            </div>
+          </div>
+          <div class="column">
+            <div class="field">
+              <label class="label">Public Key</label>
+              <div class="control">
+                <input class="input" name="publicKey" type="text" value="<%= interface.publicKey %>" readonly required />
+              </div>
+              <p class="help">it's generate automatically from your host don't change it.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Post Up</label>
+          <div class="control">
+            <input class="input" name="postUp" type="text" value="<%= interface.postUp %>" />
+          </div>
+          <p class="help">you can enter bash command, it's run when interface turning on.</p>
+        </div>
+
+        <div class="field">
+          <label class="label">Post Down</label>
+          <div class="control">
+            <input class="input" name="postDown" type="text" value="<%= interface.postDown %>" />
+          </div>
+          <p class="help">you can enter bash command, it's run when interface turning down.</p>
+        </div>
+
+        <label class="checkbox pt-5 pb-6"> <input type="checkbox" name="enable" <%= interface.enable === true ? 'checked' : '' %>/> Start on startup </label>
+      </div>
+
+      <div id="peers">
+        <h3 class="title is-3">Peers</h3>
+
+        <table class="table is-fullwidth is-hoverable">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Address</th>
+              <th>Public Key</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="peer-list">
+            <tr id="peer-template" style="display: none">
+              <td style="width: 350px">
+                <input class="input is-small" type="text" placeholder="John Doe's Phone" />
+              </td>
+              <td style="width: 200px">
+                <input class="input is-small" type="text" placeholder="10.10.1.1/32" />
+              </td>
+              <td style="width: 600px">
+                <input class="input is-small" type="text" placeholder="XXXXXXXXXXXXXXXXXXXXXXXXXX" />
+              </td>
+              <td><button class="button is-ghost delete-peer is-small" style="padding: 0">Delete</button></td>
+            </tr>
+
+            <% if (interface.peers){interface.peers.forEach(function(peer, index) { %>
+
+            <tr>
+              <td style="width: 350px">
+                <input class="input is-static is-small" readonly type="text" name="peers[<%= index %>][desc]" value="<%= peer.desc %>" />
+              </td>
+              <td style="width: 200px">
+                <input class="input is-static is-small" readonly type="text" name="peers[<%= index %>][address]" value="<%= peer.address %>" />
+              </td>
+              <td style="width: 600px">
+                <input class="input is-static is-small" readonly type="text" name="peers[<%= index %>][publicKey]" value="<%= peer.publicKey %>" />
+              </td>
+              <td><button class="button is-ghost delete-peer is-small" style="padding: 0">Delete</button></td>
+            </tr>
+
+            <% }); }%>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4"><button id="add-peer" style="padding: 0" class="button is-ghost">Add Peer</button></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="field is-grouped mt-6">
+        <p class="control">
+          <button class="button is-primary"><%= locals.action === 'create' ? 'Create Interface' : 'Save Changes' %></button>
+        </p>
+        <p class="control">
+          <a class="button" href="/"> Discard </a>
+        </p>
+      </div>
+    </form>
+  </div>
+</section>
+<script>
+  function getNextIndex() {
+    var tbody = document.querySelector("#peer-list");
+    var lastTr = tbody.children[tbody.childElementCount - 1];
+    var NameOfLastTrInput = lastTr.children[0].children[0].name;
+    indexOfLastTr = NameOfLastTrInput === "" ? 0 : parseInt(NameOfLastTrInput.substr(6));
+    return indexOfLastTr + 1;
+  }
+
+  document.querySelector("#add-peer").addEventListener("click", function (e) {
+    e.preventDefault();
+
+    let newIndex = getNextIndex();
+    var newClient = document.querySelector("#peer-template").cloneNode(true);
+    newClient.style.display = "";
+    newClient.querySelectorAll("input").forEach((input, index) => {
+      input.setAttribute("required", "");
+      switch (index) {
+        case 0:
+          input.setAttribute("name", "peers[" + newIndex + "][desc]");
+          break;
+        case 1:
+          input.setAttribute("name", "peers[" + newIndex + "][address]");
+          break;
+        case 2:
+          input.setAttribute("name", "peers[" + newIndex + "][publicKey]");
+          break;
+      }
+    });
+
+    document.querySelector("#peer-list").append(newClient);
+  });
+
+  document.addEventListener("click", function (e) {
+    let clickedElement = e.target;
+    if (clickedElement.classList.contains("delete-peer")) {
+      e.preventDefault();
+    }
+  });
+
+  document.addEventListener("dblclick", function (e) {
+    let clickedElement = e.target;
+    if (clickedElement.classList.contains("delete-peer")) {
+      e.preventDefault();
+      clickedElement.closest("tr").remove();
+    }
+  });
+</script>
+<%- include('footer'); -%>

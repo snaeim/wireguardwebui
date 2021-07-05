@@ -3,20 +3,26 @@
 <section class="section">
   <div class="container">
     <div class="columns">
-      <div class="column is-offset-one-fifth is-three-fifths">
+      <div class="column">
         <% interfaces.forEach(function(interface){ %>
 
         <div class="box">
           <div class="columns">
-            <div class="column is-one-fifth has-text-centered <%= interface.enable === true ? 'enabled-interface' : 'disabled-interface' %>">
+            <div class="column is-2 has-text-centered <%= interface.enable === true ? 'enabled-interface' : 'disabled-interface' %>">
               <p class="m-5"><span class="material-icons">link</span></p>
               <strong><%= interface.name %></strong>
             </div>
             <div class="column is-clipped" style="white-space: nowrap">
+              <p><strong>Description: </strong><%= interface.desc %></p>
               <p><strong>Address: </strong><%= interface.address %></p>
               <p><strong>Port: </strong><%= interface.port %></p>
               <p><strong>Public Key: </strong><%= interface.publicKey %></p>
-              <a class="button is-small mt-3" href="/interface/edit/<%= interface.name %>">Edit</a>
+            </div>
+            <div class="column is-2">
+              <a class="button is-small my-1 is-fullwidth" href="/interface/edit/<%= interface.name %>">Edit</a>
+              <a class="button is-small my-1 is-fullwidth" href="/interface/activate/<%= interface.name %>">Activate</a>
+              <a class="button is-small my-1 is-fullwidth delete-interface" href="/interface/delete/<%= interface.name %>">Delete</a>
+              <a class="button is-small my-1 is-fullwidth" href="/peer/add/<%= interface.name %>">Add Peer</a>
             </div>
           </div>
         </div>
@@ -26,5 +32,19 @@
     </div>
   </div>
 </section>
+
+<script>
+  document.querySelectorAll(".delete-interface").forEach((delBtn) => {
+    delBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      const href = delBtn.href;
+      const splitedHref = href.split("/");
+      let confirmDeleteInterface = confirm("Are you sure to delete " + splitedHref[splitedHref.length - 1] + "?");
+      if (confirmDeleteInterface) {
+        window.location.href = href;
+      }
+    });
+  });
+</script>
 
 <%- include('footer'); -%>

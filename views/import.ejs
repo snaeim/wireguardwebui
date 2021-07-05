@@ -1,0 +1,35 @@
+<%- include('header'); -%> <%- include('navbar'); -%>
+
+<section class="section">
+  <div class="container">
+    <div class="columns">
+      <div class="column">
+        <% if(locals.err) { %>
+        <article class="message is-danger is-small">
+          <div class="message-body"><%= err %></div>
+        </article>
+        <% } %>
+        <form action="" method="POST" enctype="multipart/form-data">
+          <div class="file is-centered is-large is-boxed">
+            <label class="file-label">
+              <input class="file-input" type="file" name="configFile" />
+              <span class="file-cta">
+                <span class="file-icon">
+                  <span class="material-icons"> file_upload </span>
+                </span>
+                <span class="file-label"> Select config file </span>
+              </span>
+            </label>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+<script>
+  document.querySelector("input[name=configFile]").addEventListener("change", (e) => {
+    document.querySelector("form").submit();
+  });
+</script>
+
+<%- include('footer'); -%>

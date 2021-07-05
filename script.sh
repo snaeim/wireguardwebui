@@ -8,4 +8,10 @@ case $ACTION in
     printf '{"privateKey":"%s","publicKey":"%s"}' $PRIVATE_KEY $PUBLIC_KEY
     ;;
 
+    genPublicKey)
+    PRIVATE_KEY=$2
+    PUBLIC_KEY=ZUgb9IdFkfjfMIOJMBOWTcQbntIV3CQjka/fhVktSDw=
+    printf '{"privateKey":"%s","publicKey":"%s"}' $PRIVATE_KEY $PUBLIC_KEY
+    ;;
+
 esac
