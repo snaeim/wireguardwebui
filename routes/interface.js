@@ -17,7 +17,7 @@ const db = low(adapter);
 db.defaults({ admin: {}, interfaces: [] }).write();
 
 router.get("/create", function (req, res, next) {
-  var wgKeys = exec("./script.sh getKeys", function (err, stdout, stderr) {
+  exec("./script.sh getKeys", function (err, stdout, stderr) {
     if (err) {
       console.error(`exec error: ${err}`);
       return;
@@ -28,6 +28,7 @@ router.get("/create", function (req, res, next) {
 });
 
 router.get("/edit/:interfaceName", function (req, res, next) {
+  db.read();
   var interfaceInfo = db.get("interfaces").find({ name: req.params.interfaceName }).value();
   res.render("interface", { action: "edit", interface: interfaceInfo });
 });

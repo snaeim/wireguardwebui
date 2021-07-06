@@ -5,3 +5,12 @@
 .disabled-interface {
   background-color: #ff5f57;
 }
+
+.select,
+.select select {
+  width: 100%;
+}
+
+label {
+  user-select: none;
+}
