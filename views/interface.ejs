@@ -5,9 +5,11 @@
     <% if(locals.err) { %>
     <article class="message is-danger is-small">
       <div class="message-body">
-        <% err.forEach(item=>{ %>
+        <% if(err.isArray) { %> <% err.forEach(item => { %>
         <p><%= item %></p>
-        <% }); %>
+        <% }); }else{ %>
+        <p><%= err %></p>
+        <% } %>
       </div>
     </article>
     <% } %>

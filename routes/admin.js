@@ -14,6 +14,8 @@ const db = low(adapter);
 db.defaults({ admin: {}, interfaces: [] }).write();
 
 router.get("/login", function (req, res, next) {
+  db.read();
+
   // check for existing admin
   var admin = db.get("admin").value();
   // check for user login
@@ -41,6 +43,8 @@ router.get("/login", function (req, res, next) {
 });
 
 router.post("/login", function (req, res, next) {
+  db.read();
+
   // check for existing admin
   var admin = db.get("admin").value();
   // check for user login

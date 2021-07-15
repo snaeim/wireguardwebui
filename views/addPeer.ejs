@@ -2,11 +2,24 @@
 
 <section class="section">
   <div class="container">
+    <% if(locals.err) { %>
+    <article class="message is-danger is-small">
+      <div class="message-body"><%= err %></div>
+    </article>
+    <% } %> <% if (locals.newClientConfig){ %>
+    <div class="columns">
+      <div class="column">
+        <article class="message is-primary">
+          <div class="message-body">Client successfully created, make sure to take config file.</div>
+        </article>
+      </div>
+    </div>
+    <% } %>
     <div class="columns">
       <div class="column">
         <form class="box" action="" method="POST">
           <div class="field">
-            <label id="enable-address-edit" class="label">Description</label>
+            <label class="label">Description</label>
             <div class="control">
               <input class="input" name="desc" required type="text" placeholder="John Doe's Phone" />
             </div>
@@ -75,7 +88,7 @@
   <div class="modal-background"></div>
   <div class="modal-content">
     <p class="image is-square">
-      <img src="./loading.gif" alt="" />
+      <img src="/images/loading.gif" alt="" />
     </p>
   </div>
   <button class="modal-close is-large" aria-label="close"></button>
@@ -127,7 +140,7 @@
 
   document.querySelector(".modal-close").addEventListener("click", function (e) {
     this.closest("div.modal").classList.remove("is-active", "is-clipped");
-    document.querySelector("#modal-qrcode img").src = "./loading.gif";
+    document.querySelector("#modal-qrcode img").src = "/images/loading.gif";
   });
 
   document.querySelector("#enable-address-edit").addEventListener("dblclick", (e) => {
