@@ -18,10 +18,13 @@ exports.peerCreate = async (req, res) => {
 
   const interfaceInfo = db.get("interfaces").find({ name: req.params.interfaceName }).value();
   try {
-    const nextIpAddress = await getNextIpAddress(interfaceInfo);
+    var nextIpAddress = await getNextIpAddress(interfaceInfo);
+    if (nextIpAddress === null) {
+      throw new Error("No IP address available.");
+    }
     res.render("addPeer", { nextIpAddress: nextIpAddress });
   } catch (err) {
-    res.render("addPeer", { nextIpAddress: err });
+    res.render("addPeer", { err: err, nextIpAddress: nextIpAddress });
   }
 };
 
@@ -35,10 +38,11 @@ exports.peerCreatePost = async (req, res) => {
   db.read();
 
   // check ip availability
-  var interfaceInfo = db.get("interfaces").find({ name: req.params.interfaceName }).value();
+  const interfaceInfo = db.get("interfaces").find({ name: req.params.interfaceName }).value();
 
   const inuseIpAddress = await getInuseIpAddress(interfaceInfo);
   const reqIpAddress = req.body.address + "/32";
+  var nextIpAddress;
 
   try {
     if (!isCidr.v4(reqIpAddress)) {
@@ -48,7 +52,7 @@ exports.peerCreatePost = async (req, res) => {
       throw new Error("Address is inused.");
     }
 
-    var keys = await shellExec("./script.sh getKeys").catch(console.error("Can't run bash script"));
+    let keys = await shellExec("./script.sh getKeys");
     keys = JSON.parse(keys);
     db.get("interfaces")
       .find({ name: req.params.interfaceName })
@@ -61,12 +65,16 @@ exports.peerCreatePost = async (req, res) => {
       .write();
 
     newClientConfig = generatePeerConfig(keys.privateKey, reqIpAddress, req.body.dns, interfaceInfo.publicKey, req.body.endpoint, interfaceInfo.port);
-    const nextIpAddress = await getNextIpAddress(interfaceInfo);
+    nextIpAddress = await getNextIpAddress(interfaceInfo);
+    if (nextIpAddress === null) {
+      throw new Error("No IP address available.");
+    }
 
     res.render("addPeer", { nextIpAddress: nextIpAddress, newClientConfig: newClientConfig });
   } catch (err) {
-    const nextIpAddress = await getNextIpAddress(interfaceInfo);
-    res.render("addPeer", { nextIpAddress: nextIpAddress, err: err });
+    console.log("get error");
+    nextIpAddress = await getNextIpAddress(interfaceInfo);
+    res.render("addPeer", { err: err, nextIpAddress: nextIpAddress, newClientConfig: typeof newClientConfig === "undefined" ? undefined : newClientConfig });
   }
 };
 
@@ -93,20 +101,15 @@ async function getNextIpAddress(interface) {
   let inuseIpAddress = await getInuseIpAddress(interface);
   let addressInfo = new Netmask(interface.address);
   let nextIpAddress = null;
-  console.log(addressInfo);
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     addressInfo.forEach((ip) => {
       if (!inuseIpAddress.includes(ip) && nextIpAddress === null) {
         nextIpAddress = ip;
       }
     });
 
-    if (nextIpAddress === null) {
-      reject("No IP address available");
-    } else {
-      resolve(nextIpAddress);
-    }
+    resolve(nextIpAddress);
   });
 }
 
