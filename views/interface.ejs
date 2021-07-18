@@ -2,7 +2,11 @@
 
 <section class="section">
   <div class="container">
-    <% if(locals.err) { %>
+    <% if(locals.action === 'edit') { %>
+    <div class="notification is-warning is-light">
+      <p>After press Save Changes button, interface instantly will be restarted.</p>
+    </div>
+    <% } %> <% if(locals.err) { %>
     <article class="message is-danger is-small">
       <div class="message-body">
         <% if(err.isArray) { %> <% err.forEach(item => { %>

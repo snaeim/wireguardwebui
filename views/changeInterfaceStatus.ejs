@@ -1,0 +1,14 @@
+<%- include('header'); -%> <%- include('navbar'); -%>
+
+<section class="section">
+  <pre>Request for <%= requestFor %> <%= interfaceName %>:<br><br>result:<br><%= result %><br><br>redirecting to homepage...</pre>
+</section>
+<script>
+  (() => {
+    setTimeout(() => {
+      window.location.href = "/interface";
+    }, 2000);
+  })();
+</script>
+
+<%- include('footer'); -%>

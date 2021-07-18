@@ -18,11 +18,12 @@ exports.interfaceList = async (req, res) => {
   db.read();
 
   let interfaces = db.get("interfaces").sortBy("name").value();
+  interfaces = await determineInterfaceStatus(interfaces);
   res.render("index", { interfaces: interfaces });
 };
 
 exports.interfaceCreate = async (req, res) => {
-  var keys = await shellExec("./script.sh getKeys").catch(console.error("Can't run bash script"));
+  var keys = await shellExec("./script.sh getKeys");
   keys = JSON.parse(keys);
   res.render("interface", { action: "create", interface: keys });
 };
@@ -45,6 +46,28 @@ exports.interfaceDelete = async (req, res) => {
 
   db.get("interfaces").remove({ name: req.params.interfaceName }).write();
   res.redirect("/interface");
+};
+
+exports.interfaceActivate = async (req, res) => {
+  try {
+    var interfaceName = req.params.interfaceName;
+    const result = await shellExec("./script.sh activateInterface " + interfaceName);
+    res.render("changeInterfaceStatus", { requestFor: "Activate", interfaceName: interfaceName, result: result });
+  } catch (err) {
+    const result = err;
+    res.render("changeInterfaceStatus", { requestFor: "Activate", interfaceName: interfaceName, result: result });
+  }
+};
+
+exports.interfaceDeactivate = async (req, res) => {
+  try {
+    var interfaceName = req.params.interfaceName;
+    const result = await shellExec("./script.sh deactivateInterface " + interfaceName);
+    res.render("changeInterfaceStatus", { requestFor: "Deactivate", interfaceName: interfaceName, result: result });
+  } catch (err) {
+    const result = err;
+    res.render("changeInterfaceStatus", { requestFor: "Activate", interfaceName: interfaceName, result: result });
+  }
 };
 
 /**
@@ -252,5 +275,27 @@ function interfaceToDotConf(interface) {
       conf += "\nAllowedIPs = " + peer.address;
     });
     resolve(conf);
+  });
+}
+
+async function determineInterfaceStatus(interfaceList) {
+  let wgResult = await shellExec("./script.sh getActiveInterface");
+  let activeInterface = [];
+  return new Promise((resolve) => {
+    // get name of active interface and clean them
+    matchedItem = wgResult.match(/^interface:.*/gm);
+    if (!_.isEmpty(matchedItem)) {
+      matchedItem.forEach((item) => {
+        activeInterface.push(item.substring(11));
+      });
+    }
+
+    // loop on list of interface for append status
+    if (!_.isEmpty(interfaceList)) {
+      interfaceList.forEach((interface) => {
+        interface.active = activeInterface.includes(interface.name);
+      });
+    }
+    resolve(interfaceList);
   });
 }

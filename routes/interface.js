@@ -9,6 +9,8 @@ router.get("/create", interfaceController.interfaceCreate);
 router.get("/edit/:interfaceName", interfaceController.interfaceUpdate);
 router.get("/delete/:interfaceName", interfaceController.interfaceDelete);
 router.get("/import", interfaceController.interfaceImport);
+router.get("/activate/:interfaceName", interfaceController.interfaceActivate);
+router.get("/deactivate/:interfaceName", interfaceController.interfaceDeactivate);
 
 router.post("/create", interfaceController.interfaceCreatePost);
 router.post("/edit/:interfaceName", interfaceController.interfaceUpdatePost);
