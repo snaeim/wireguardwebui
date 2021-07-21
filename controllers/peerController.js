@@ -4,7 +4,7 @@ const isCidr = require("is-cidr");
 
 const low = require("lowdb");
 const FileSync = require("lowdb/adapters/FileSync");
-const adapter = new FileSync("db.json");
+const adapter = new FileSync("src/db.json");
 const db = low(adapter);
 
 /**
@@ -52,7 +52,7 @@ exports.peerCreatePost = async (req, res) => {
       throw new Error("Address is inused.");
     }
 
-    let keys = await shellExec("./script.sh getKeys");
+    let keys = await shellExec("src/script.sh getKeys");
     keys = JSON.parse(keys);
     db.get("interfaces")
       .find({ name: req.params.interfaceName })

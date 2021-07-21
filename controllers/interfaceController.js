@@ -2,10 +2,11 @@ const exec = require("child_process").exec;
 const isCidr = require("is-cidr");
 const _ = require("lodash");
 const ini = require("ini");
+const fs = require("fs");
 
 const low = require("lowdb");
 const FileSync = require("lowdb/adapters/FileSync");
-const adapter = new FileSync("db.json");
+const adapter = new FileSync("src/db.json");
 const db = low(adapter);
 
 /**
@@ -23,7 +24,7 @@ exports.interfaceList = async (req, res) => {
 };
 
 exports.interfaceCreate = async (req, res) => {
-  var keys = await shellExec("./script.sh getKeys");
+  var keys = await shellExec("src/script.sh getKeys");
   keys = JSON.parse(keys);
   res.render("interface", { action: "create", interface: keys });
 };
@@ -36,7 +37,8 @@ exports.interfaceUpdate = async (req, res) => {
   // updating db state
   db.read();
 
-  var interfaceInfo = db.get("interfaces").find({ name: req.params.interfaceName }).value();
+  let interfaceInfo = db.get("interfaces").find({ name: req.params.interfaceName }).value();
+  interfaceInfo = (await determineInterfaceStatus([interfaceInfo]))[0];
   res.render("interface", { action: "edit", interface: interfaceInfo });
 };
 
@@ -44,6 +46,7 @@ exports.interfaceDelete = async (req, res) => {
   // updating db state
   db.read();
 
+  fs.unlinkSync("/Users/naeim/Desktop/testwg/" + req.params.interfaceName + ".conf");
   db.get("interfaces").remove({ name: req.params.interfaceName }).write();
   res.redirect("/interface");
 };
@@ -51,7 +54,7 @@ exports.interfaceDelete = async (req, res) => {
 exports.interfaceActivate = async (req, res) => {
   try {
     var interfaceName = req.params.interfaceName;
-    const result = await shellExec("./script.sh activateInterface " + interfaceName);
+    const result = await shellExec("src/script.sh activateInterface " + interfaceName);
     res.render("changeInterfaceStatus", { requestFor: "Activate", interfaceName: interfaceName, result: result });
   } catch (err) {
     const result = err;
@@ -62,7 +65,7 @@ exports.interfaceActivate = async (req, res) => {
 exports.interfaceDeactivate = async (req, res) => {
   try {
     var interfaceName = req.params.interfaceName;
-    const result = await shellExec("./script.sh deactivateInterface " + interfaceName);
+    const result = await shellExec("src/script.sh deactivateInterface " + interfaceName);
     res.render("changeInterfaceStatus", { requestFor: "Deactivate", interfaceName: interfaceName, result: result });
   } catch (err) {
     const result = err;
@@ -97,9 +100,11 @@ exports.interfaceCreatePost = async (req, res) => {
         postUp: interface.postUp,
         postDown: interface.postDown,
         enable: interface.enable === "on" ? true : false,
-        peers: interface.peers,
+        peers: typeof interface.peers === "undefined" ? [] : interface.peers,
       })
       .write();
+    let dotConf = await interfaceToDotConf(interface);
+    fs.writeFileSync("/Users/naeim/Desktop/testwg/" + interface.name + ".conf", dotConf);
     res.redirect("/interface");
   } catch (err) {
     res.render("interface", { action: "create", err: err, interface: req.body });
@@ -112,12 +117,21 @@ exports.interfaceUpdatePost = async (req, res) => {
 
   // checking for new name availability
   var interfaceDB = db.get("interfaces").find({ name: req.body.name }).value();
+  var requestForChangeName = req.params.interfaceName !== req.body.name;
+  var interfaceIsActive = await isActiveInterface(req.params.interfaceName);
 
   try {
     const interface = await validateInterface(req.body);
-    if (req.params.interfaceName !== interface.name && !_.isEmpty(interfaceDB)) {
+    if (requestForChangeName && !_.isEmpty(interfaceDB)) {
       throw new Error("Interface is already in use.");
     }
+
+    // before edit
+    if (interfaceIsActive) {
+      await shellExec("src/script.sh deactivateInterface " + req.params.interfaceName);
+    }
+
+    fs.unlinkSync("/Users/naeim/Desktop/testwg/" + req.params.interfaceName + ".conf");
     db.get("interfaces").remove({ name: req.params.interfaceName }).write();
     db.get("interfaces")
       .push({
@@ -133,6 +147,15 @@ exports.interfaceUpdatePost = async (req, res) => {
         peers: interface.peers,
       })
       .write();
+
+    let dotConf = await interfaceToDotConf(interface);
+    fs.writeFileSync("/Users/naeim/Desktop/testwg/" + interface.name + ".conf", dotConf);
+
+    //after edit
+    if (interfaceIsActive) {
+      await shellExec("src/script.sh activateInterface " + interface.name);
+    }
+
     res.redirect("/interface");
   } catch (err) {
     res.render("interface", { action: "edit", err: err, interface: req.body });
@@ -153,7 +176,7 @@ exports.interfaceImportPost = async (req, res) => {
     let interface = await dotConfToInterface(config);
 
     // generate public key for interface
-    let keys = await shellExec("./script.sh genPublicKey " + interface.privateKey);
+    let keys = await shellExec("src/script.sh genPublicKey " + interface.privateKey);
     keys = JSON.parse(keys);
     interface.publicKey = keys.publicKey;
 
@@ -269,17 +292,19 @@ function interfaceToDotConf(interface) {
     conf += interface.postUp === "" ? "" : "\nPostUp = " + interface.postUp;
     conf += interface.postDown === "" ? "" : "\npostDown = " + interface.postDown;
 
-    interface.peers.forEach((peer) => {
-      conf += "\n\n[Peer]";
-      conf += "\nPublicKey = " + peer.publicKey;
-      conf += "\nAllowedIPs = " + peer.address;
-    });
+    if (Array.isArray(interface.peers)) {
+      interface.peers.forEach((peer) => {
+        conf += "\n\n[Peer]";
+        conf += "\nPublicKey = " + peer.publicKey;
+        conf += "\nAllowedIPs = " + peer.address;
+      });
+    }
     resolve(conf);
   });
 }
 
-async function determineInterfaceStatus(interfaceList) {
-  let wgResult = await shellExec("./script.sh getActiveInterface");
+async function getActiveInterface() {
+  let wgResult = await shellExec("src/script.sh getActiveInterface");
   let activeInterface = [];
   return new Promise((resolve) => {
     // get name of active interface and clean them
@@ -289,7 +314,13 @@ async function determineInterfaceStatus(interfaceList) {
         activeInterface.push(item.substring(11));
       });
     }
+    resolve(activeInterface);
+  });
+}
 
+async function determineInterfaceStatus(interfaceList) {
+  let activeInterface = await getActiveInterface();
+  return new Promise((resolve) => {
     // loop on list of interface for append status
     if (!_.isEmpty(interfaceList)) {
       interfaceList.forEach((interface) => {
@@ -298,4 +329,9 @@ async function determineInterfaceStatus(interfaceList) {
     }
     resolve(interfaceList);
   });
+}
+
+async function isActiveInterface(interfaceName) {
+  let activeInterface = await getActiveInterface();
+  return activeInterface.includes(interfaceName);
 }

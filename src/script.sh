@@ -63,4 +63,13 @@ peer: j/DlrE8Imw1c3hzVpEaKUALjTtczEy8+MYwCuvz8nig=
 [#] ip link set mtu 1420 up dev wg1"
   ;;
 
+  restartInterface)
+  INTERFACE_NAME=$2
+  printf "[#] ip link delete dev wg1
+[#] ip link add wg1 type wireguard
+[#] wg setconf wg1 /dev/fd/63
+[#] ip -4 address add 10.8.240.1/25 dev wg1
+[#] ip link set mtu 1420 up dev wg1"
+  ;;
+
 esac

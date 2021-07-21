@@ -2,7 +2,7 @@
 
 <section class="section">
   <div class="container">
-    <% if(locals.action === 'edit') { %>
+    <% if(locals.action === 'edit' && interface.active === true) { %>
     <div class="notification is-warning is-light">
       <p>After press Save Changes button, interface instantly will be restarted.</p>
     </div>
