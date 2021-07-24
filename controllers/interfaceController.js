@@ -9,7 +9,7 @@ const FileSync = require("lowdb/adapters/FileSync");
 const adapter = new FileSync("src/db.json");
 const db = low(adapter);
 
-var wireguardDir="/Users/naeim/Desktop/testwg/";
+var wireguardDir="/etc/wireguard/";
 
 /**
  *
@@ -96,8 +96,7 @@ exports.interfaceCreatePost = async (req, res) => {
     let dotConf = await interfaceToDotConf(interface);
 
     // write config file to wireguard dir
-    // fs.writeFileSync(wireguardDir + interface.name + ".conf", dotConf);
-    await shellExec("sudo src/script.sh writeConfigFile "+ interface.name+".conf "+dotConf);
+    fs.writeFileSync(wireguardDir + interface.name + ".conf", dotConf);
 
     // save interface info to database
     db.get("interfaces")
@@ -296,7 +295,7 @@ function interfaceToDotConf(interface) {
   return new Promise((resolve) => {
     let conf = "[Interface]";
     conf += "\nAddress = " + interface.address;
-    conf += "\nPort = " + interface.port;
+    conf += "\nListenPort = " + interface.port;
     conf += "\nPrivateKey = " + interface.privateKey;
     conf += interface.postUp === "" ? "" : "\nPostUp = " + interface.postUp;
     conf += interface.postDown === "" ? "" : "\npostDown = " + interface.postDown;
@@ -312,8 +311,11 @@ function interfaceToDotConf(interface) {
   });
 }
 
+
+// now cant get interface name
 async function getActiveInterface() {
   let wgResult = await shellExec("sudo src/script.sh getActiveInterface");
+  console.log(wgResult)
   let activeInterface = [];
   return new Promise((resolve) => {
     // get name of active interface and clean them

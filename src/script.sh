@@ -20,22 +20,17 @@ case $ACTION in
     ;;
 
   getActiveInterface)
-    printf $(wg)
+    echo $(wg)
     ;;
 
   deactivateInterface)
     INTERFACE_NAME=$2
-    printf $(wg-quick down $INTERFACE_NAME)
+    echo $(wg-quick down $INTERFACE_NAME)
     ;;
 
   activateInterface)
     INTERFACE_NAME=$2
-    printf $(wg-quick up $INTERFACE_NAME)
+    echo $(wg-quick up $INTERFACE_NAME)
     ;;
-
-  writeConfigFile)
-    FILENAME=$2
-    CONFIG=$3
-    printf $CONFIG >> /etc/wireguard/$FILENAME
 
 esac
