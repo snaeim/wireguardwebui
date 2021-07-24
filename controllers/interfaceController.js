@@ -9,6 +9,8 @@ const FileSync = require("lowdb/adapters/FileSync");
 const adapter = new FileSync("src/db.json");
 const db = low(adapter);
 
+var wireguardDir="/Users/naeim/Desktop/testwg/";
+
 /**
  *
  * Get Routers
@@ -24,7 +26,7 @@ exports.interfaceList = async (req, res) => {
 };
 
 exports.interfaceCreate = async (req, res) => {
-  var keys = await shellExec("src/script.sh getKeys");
+  var keys = await shellExec("sudo src/script.sh getKeys");
   keys = JSON.parse(keys);
   res.render("interface", { action: "create", interface: keys });
 };
@@ -46,7 +48,7 @@ exports.interfaceDelete = async (req, res) => {
   // updating db state
   db.read();
 
-  fs.unlinkSync("/Users/naeim/Desktop/testwg/" + req.params.interfaceName + ".conf");
+  fs.unlinkSync(wireguardDir + req.params.interfaceName + ".conf");
   db.get("interfaces").remove({ name: req.params.interfaceName }).write();
   res.redirect("/interface");
 };
@@ -54,7 +56,7 @@ exports.interfaceDelete = async (req, res) => {
 exports.interfaceActivate = async (req, res) => {
   try {
     var interfaceName = req.params.interfaceName;
-    const result = await shellExec("src/script.sh activateInterface " + interfaceName);
+    const result = await shellExec("sudo src/script.sh activateInterface " + interfaceName);
     res.render("changeInterfaceStatus", { requestFor: "Activate", interfaceName: interfaceName, result: result });
   } catch (err) {
     const result = err;
@@ -65,7 +67,7 @@ exports.interfaceActivate = async (req, res) => {
 exports.interfaceDeactivate = async (req, res) => {
   try {
     var interfaceName = req.params.interfaceName;
-    const result = await shellExec("src/script.sh deactivateInterface " + interfaceName);
+    const result = await shellExec("sudo src/script.sh deactivateInterface " + interfaceName);
     res.render("changeInterfaceStatus", { requestFor: "Deactivate", interfaceName: interfaceName, result: result });
   } catch (err) {
     const result = err;
@@ -89,6 +91,12 @@ exports.interfaceCreatePost = async (req, res) => {
     if (!_.isEmpty(interfaceDB)) {
       throw new Error("Interface is already in use.");
     }
+
+    // write config file to wireguard dir
+    // fs.writeFileSync(wireguardDir + interface.name + ".conf", dotConf);
+    await shellExec("sudo src/script.sh writeConfigFile "+ interface.name+".conf "+dotConf);
+
+    // save interface info to database
     db.get("interfaces")
       .push({
         name: interface.name,
@@ -104,7 +112,6 @@ exports.interfaceCreatePost = async (req, res) => {
       })
       .write();
     let dotConf = await interfaceToDotConf(interface);
-    fs.writeFileSync("/Users/naeim/Desktop/testwg/" + interface.name + ".conf", dotConf);
     res.redirect("/interface");
   } catch (err) {
     res.render("interface", { action: "create", err: err, interface: req.body });
@@ -128,10 +135,10 @@ exports.interfaceUpdatePost = async (req, res) => {
 
     // before edit
     if (interfaceIsActive) {
-      await shellExec("src/script.sh deactivateInterface " + req.params.interfaceName);
+      await shellExec("sudo src/script.sh deactivateInterface " + req.params.interfaceName);
     }
 
-    fs.unlinkSync("/Users/naeim/Desktop/testwg/" + req.params.interfaceName + ".conf");
+    fs.unlinkSync(wireguardDir + req.params.interfaceName + ".conf");
     db.get("interfaces").remove({ name: req.params.interfaceName }).write();
     db.get("interfaces")
       .push({
@@ -149,11 +156,11 @@ exports.interfaceUpdatePost = async (req, res) => {
       .write();
 
     let dotConf = await interfaceToDotConf(interface);
-    fs.writeFileSync("/Users/naeim/Desktop/testwg/" + interface.name + ".conf", dotConf);
+    fs.writeFileSync(wireguardDir + interface.name + ".conf", dotConf);
 
     //after edit
     if (interfaceIsActive) {
-      await shellExec("src/script.sh activateInterface " + interface.name);
+      await shellExec("sudo src/script.sh activateInterface " + interface.name);
     }
 
     res.redirect("/interface");
@@ -176,7 +183,7 @@ exports.interfaceImportPost = async (req, res) => {
     let interface = await dotConfToInterface(config);
 
     // generate public key for interface
-    let keys = await shellExec("src/script.sh genPublicKey " + interface.privateKey);
+    let keys = await shellExec("sudo src/script.sh genPublicKey " + interface.privateKey);
     keys = JSON.parse(keys);
     interface.publicKey = keys.publicKey;
 
@@ -304,7 +311,7 @@ function interfaceToDotConf(interface) {
 }
 
 async function getActiveInterface() {
-  let wgResult = await shellExec("src/script.sh getActiveInterface");
+  let wgResult = await shellExec("sudo src/script.sh getActiveInterface");
   let activeInterface = [];
   return new Promise((resolve) => {
     // get name of active interface and clean them
