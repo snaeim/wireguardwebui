@@ -92,6 +92,9 @@ exports.interfaceCreatePost = async (req, res) => {
       throw new Error("Interface is already in use.");
     }
 
+    // generate .conf string for save to wireguard dir
+    let dotConf = await interfaceToDotConf(interface);
+
     // write config file to wireguard dir
     // fs.writeFileSync(wireguardDir + interface.name + ".conf", dotConf);
     await shellExec("sudo src/script.sh writeConfigFile "+ interface.name+".conf "+dotConf);
@@ -111,7 +114,6 @@ exports.interfaceCreatePost = async (req, res) => {
         peers: typeof interface.peers === "undefined" ? [] : interface.peers,
       })
       .write();
-    let dotConf = await interfaceToDotConf(interface);
     res.redirect("/interface");
   } catch (err) {
     res.render("interface", { action: "create", err: err, interface: req.body });
