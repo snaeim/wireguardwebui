@@ -52,6 +52,8 @@ exports.interfaceDelete = async (req, res) => {
   if(await isActiveInterface(interfaceName)){
     await shellExec("sudo src/script.sh deactivateInterface " + interfaceName);
   }
+  
+  await shellExec("sudo src/script.sh disableInterface " + interfaceName); 
 
   fs.unlinkSync(wireguardDir + interfaceName + ".conf");
   db.get("interfaces").remove({ name: interfaceName }).write();
@@ -118,6 +120,11 @@ exports.interfaceCreatePost = async (req, res) => {
         peers: typeof interface.peers === "undefined" ? [] : interface.peers,
       })
       .write();
+
+    if(interface.enable){
+      await shellExec("sudo src/script.sh enableInterface " + interface.name); 
+    }
+
     res.redirect("/interface");
   } catch (err) {
     res.render("interface", { action: "create", err: err, interface: req.body });
@@ -160,6 +167,12 @@ exports.interfaceUpdatePost = async (req, res) => {
         peers: interface.peers,
       })
       .write();
+
+      if(interface.enable){
+        await shellExec("sudo src/script.sh enableInterface " + interface.name); 
+      }else{
+        await shellExec("sudo src/script.sh disableInterface " + interface.name); 
+      }
 
     let dotConf = await interfaceToDotConf(interface);
     fs.writeFileSync(wireguardDir + interface.name + ".conf", dotConf);

@@ -33,4 +33,14 @@ case $ACTION in
     echo $(wg-quick up $INTERFACE_NAME)
     ;;
 
+  enableInterface)
+    INTERFACE_NAME=$2
+    echo $(systemctl enable wg-quick@$INTERFACE_NAME)
+    ;;
+
+  disableInterface)
+    INTERFACE_NAME=$2
+    echo $(systemctl disable wg-quick@$INTERFACE_NAME)
+    ;;
+
 esac
