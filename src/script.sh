@@ -43,4 +43,14 @@ case $ACTION in
     echo $(systemctl disable wg-quick@$INTERFACE_NAME)
     ;;
 
+  moveFile)
+    SOURCE=$2
+    DESTINSTION=$3
+    echo $(cp $2 $3)
+    ;;
+
+  deleteFile)
+    FILENAME=$2
+    echo $(rm $2)
+
 esac

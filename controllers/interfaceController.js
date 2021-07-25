@@ -9,7 +9,8 @@ const FileSync = require("lowdb/adapters/FileSync");
 const adapter = new FileSync("src/db.json");
 const db = low(adapter);
 
-var wireguardDir="/etc/wireguard/";
+var tmpInterfaceDir = "./src/interfaces/";
+var wireguardDir = "/etc/wireguard/";
 
 /**
  *
@@ -47,15 +48,15 @@ exports.interfaceUpdate = async (req, res) => {
 exports.interfaceDelete = async (req, res) => {
   // updating db state
   db.read();
-  let interfaceName= req.params.interfaceName;
+  let interfaceName = req.params.interfaceName;
 
-  if(await isActiveInterface(interfaceName)){
+  if (await isActiveInterface(interfaceName)) {
     await shellExec("sudo src/script.sh deactivateInterface " + interfaceName);
   }
-  
-  await shellExec("sudo src/script.sh disableInterface " + interfaceName); 
 
-  fs.unlinkSync(wireguardDir + interfaceName + ".conf");
+  await shellExec("sudo src/script.sh disableInterface " + interfaceName);
+
+  fs.unlinkSync(tmpInterfaceDir + interfaceName + ".conf");
   db.get("interfaces").remove({ name: interfaceName }).write();
   res.redirect("/interface");
 };
@@ -99,11 +100,14 @@ exports.interfaceCreatePost = async (req, res) => {
       throw new Error("Interface is already in use.");
     }
 
-    // generate .conf string for save to wireguard dir
+    // generate config file
     let dotConf = await interfaceToDotConf(interface);
 
-    // write config file to wireguard dir
-    fs.writeFileSync(wireguardDir + interface.name + ".conf", dotConf);
+    // write config file to temp dir
+    fs.writeFileSync(tmpInterfaceDir + interface.name + ".conf", dotConf);
+
+    // copy config file from temp dir to wireguard dir
+    await shellExec("sudo src/script.sh moveFile " + interface.name + ".conf " + wireguardDir);
 
     // save interface info to database
     db.get("interfaces")
@@ -121,8 +125,8 @@ exports.interfaceCreatePost = async (req, res) => {
       })
       .write();
 
-    if(interface.enable){
-      await shellExec("sudo src/script.sh enableInterface " + interface.name); 
+    if (interface.enable) {
+      await shellExec("sudo src/script.sh enableInterface " + interface.name);
     }
 
     res.redirect("/interface");
@@ -151,7 +155,7 @@ exports.interfaceUpdatePost = async (req, res) => {
       await shellExec("sudo src/script.sh deactivateInterface " + req.params.interfaceName);
     }
 
-    fs.unlinkSync(wireguardDir + req.params.interfaceName + ".conf");
+    fs.unlinkSync(tmpInterfaceDir + req.params.interfaceName + ".conf");
     db.get("interfaces").remove({ name: req.params.interfaceName }).write();
     db.get("interfaces")
       .push({
@@ -168,14 +172,20 @@ exports.interfaceUpdatePost = async (req, res) => {
       })
       .write();
 
-      if(interface.enable){
-        await shellExec("sudo src/script.sh enableInterface " + interface.name); 
-      }else{
-        await shellExec("sudo src/script.sh disableInterface " + interface.name); 
-      }
+    if (interface.enable) {
+      await shellExec("sudo src/script.sh enableInterface " + interface.name);
+    } else {
+      await shellExec("sudo src/script.sh disableInterface " + interface.name);
+    }
 
+    // generate config file
     let dotConf = await interfaceToDotConf(interface);
-    fs.writeFileSync(wireguardDir + interface.name + ".conf", dotConf);
+
+    // write config file to temp dir
+    fs.writeFileSync(tmpInterfaceDir + interface.name + ".conf", dotConf);
+
+    // copy config file from temp dir to wireguard dir
+    await shellExec("sudo src/script.sh moveFile " + interface.name + ".conf " + wireguardDir);
 
     //after edit
     if (interfaceIsActive) {
@@ -328,7 +338,6 @@ function interfaceToDotConf(interface) {
     resolve(conf);
   });
 }
-
 
 // now cant get interface name
 async function getActiveInterface() {
