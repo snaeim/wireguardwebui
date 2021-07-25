@@ -47,9 +47,14 @@ exports.interfaceUpdate = async (req, res) => {
 exports.interfaceDelete = async (req, res) => {
   // updating db state
   db.read();
+  let interfaceName= req.params.interfaceName;
 
-  fs.unlinkSync(wireguardDir + req.params.interfaceName + ".conf");
-  db.get("interfaces").remove({ name: req.params.interfaceName }).write();
+  if(await isActiveInterface(interfaceName)){
+    await shellExec("sudo src/script.sh deactivateInterface " + interfaceName);
+  }
+
+  fs.unlinkSync(wireguardDir + interfaceName + ".conf");
+  db.get("interfaces").remove({ name: interfaceName }).write();
   res.redirect("/interface");
 };
 
@@ -315,11 +320,10 @@ function interfaceToDotConf(interface) {
 // now cant get interface name
 async function getActiveInterface() {
   let wgResult = await shellExec("sudo src/script.sh getActiveInterface");
-  console.log(wgResult)
   let activeInterface = [];
   return new Promise((resolve) => {
     // get name of active interface and clean them
-    matchedItem = wgResult.match(/^interface:.*/gm);
+    matchedItem = wgResult.match(/interface: (\w*)/gm);
     if (!_.isEmpty(matchedItem)) {
       matchedItem.forEach((item) => {
         activeInterface.push(item.substring(11));
