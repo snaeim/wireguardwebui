@@ -53,5 +53,26 @@ case $ACTION in
   deleteFile)
     FILENAME=$2
     echo $(rm $2)
+    ;;
+
+  addPeerToActiveInterface)
+    PRIVATE_KEY=$(wg genkey)
+    PUBLIC_KEY=$(wg pubkey <<< $PRIVATE_KEY)
+    INTERFACE_NAME=$2
+    ADDRESS=$3
+    wg set $INTERFACE_NAME peer $PUBLIC_KEY allowed-ips $ADDRESS
+    printf '\nPublicKey = %s\nAllowedIPs = %s\n' $PUBLIC_KEY $ADDRESS >> /etc/wireguard/$INTERFACE_NAME.conf
+    printf '{"privateKey":"%s","publicKey":"%s"}' $PRIVATE_KEY $PUBLIC_KEY
+    ;;
+  
+  addPeerToDeactiveInterface)
+    PRIVATE_KEY=$(wg genkey)
+    PUBLIC_KEY=$(wg pubkey <<< $PRIVATE_KEY)
+    INTERFACE_NAME=$2
+    ADDRESS=$3
+    printf '\nPublicKey = %s\nAllowedIPs = %s\n' $PUBLIC_KEY $ADDRESS >> /etc/wireguard/$INTERFACE_NAME.conf
+    printf '{"privateKey":"%s","publicKey":"%s"}' $PRIVATE_KEY $PUBLIC_KEY
+    ;;
+
 
 esac

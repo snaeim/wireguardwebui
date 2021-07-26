@@ -1,6 +1,7 @@
 const Netmask = require("netmask").Netmask;
 const exec = require("child_process").exec;
 const isCidr = require("is-cidr");
+const _ = require("lodash");
 
 const low = require("lowdb");
 const FileSync = require("lowdb/adapters/FileSync");
@@ -52,9 +53,17 @@ exports.peerCreatePost = async (req, res) => {
       throw new Error("Address is inused.");
     }
 
-    let keys = await shellExec("src/script.sh getKeys");
+    var keys;
+
+    if(await isActiveInterface(req.params.interfaceName)){
+      keys=await shellExec("sudo src/script.sh addPeerToActiveInterface "+req.params.interfaceName+" "+reqIpAddress);
+    }else{
+      keys=await shellExec("sudo src/script.sh addPeerToDeactiveInterface "+req.params.interfaceName+" "+reqIpAddress);
+    }
+
     keys = JSON.parse(keys);
-    db.get("interfaces")
+
+        db.get("interfaces")
       .find({ name: req.params.interfaceName })
       .get("peers")
       .push({
@@ -130,4 +139,25 @@ function generatePeerConfig(privateKey, address, dns, interfacePublicKey, endpoi
   peerConfig += "\n\n[Peer]\nPublicKey = " + interfacePublicKey;
   peerConfig += "\nEndpoint = " + endpoint + ":" + port;
   return peerConfig;
+}
+
+// now cant get interface name
+async function getActiveInterface() {
+  let wgResult = await shellExec("sudo src/script.sh getActiveInterface");
+  let activeInterface = [];
+  return new Promise((resolve) => {
+    // get name of active interface and clean them
+    matchedItem = wgResult.match(/interface: (\w*)/gm);
+    if (!_.isEmpty(matchedItem)) {
+      matchedItem.forEach((item) => {
+        activeInterface.push(item.substring(11));
+      });
+    }
+    resolve(activeInterface);
+  });
+}
+
+async function isActiveInterface(interfaceName) {
+  let activeInterface = await getActiveInterface();
+  return activeInterface.includes(interfaceName);
 }

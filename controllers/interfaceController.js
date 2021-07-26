@@ -172,7 +172,7 @@ exports.interfaceUpdatePost = async (req, res) => {
         postUp: interface.postUp,
         postDown: interface.postDown,
         enable: interface.enable === "on" ? true : false,
-        peers: interface.peers,
+        peers: typeof interface.peers === "undefined" ? [] : interface.peers,
       })
       .write();
 
@@ -337,6 +337,7 @@ function interfaceToDotConf(interface) {
         conf += "\nAllowedIPs = " + peer.address;
       });
     }
+    conf+="\n";
     resolve(conf);
   });
 }
