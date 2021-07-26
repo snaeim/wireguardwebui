@@ -55,15 +55,15 @@ exports.peerCreatePost = async (req, res) => {
 
     var keys;
 
-    if(await isActiveInterface(req.params.interfaceName)){
-      keys=await shellExec("sudo src/script.sh addPeerToActiveInterface "+req.params.interfaceName+" "+reqIpAddress);
-    }else{
-      keys=await shellExec("sudo src/script.sh addPeerToDeactiveInterface "+req.params.interfaceName+" "+reqIpAddress);
+    if (await isActiveInterface(req.params.interfaceName)) {
+      keys = await shellExec("sudo src/script.sh addPeerToActiveInterface " + req.params.interfaceName + " " + reqIpAddress);
+    } else {
+      keys = await shellExec("sudo src/script.sh addPeerToDeactiveInterface " + req.params.interfaceName + " " + reqIpAddress);
     }
 
     keys = JSON.parse(keys);
 
-        db.get("interfaces")
+    db.get("interfaces")
       .find({ name: req.params.interfaceName })
       .get("peers")
       .push({

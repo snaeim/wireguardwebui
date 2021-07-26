@@ -56,7 +56,7 @@ exports.interfaceDelete = async (req, res) => {
 
   await shellExec("sudo src/script.sh disableInterface " + interfaceName);
 
-  await shellExec("sudo src/script.sh deleteFile " + wireguardDir+interfaceName+".conf");
+  await shellExec("sudo src/script.sh deleteFile " + wireguardDir + interfaceName + ".conf");
 
   db.get("interfaces").remove({ name: interfaceName }).write();
   res.redirect("/interface");
@@ -124,7 +124,7 @@ exports.interfaceCreatePost = async (req, res) => {
     fs.writeFileSync(tmpInterfaceDir + interface.name + ".conf", dotConf);
 
     // copy config file from temp dir to wireguard dir
-    await shellExec("sudo src/script.sh moveFile " +tmpInterfaceDir+ interface.name + ".conf " + wireguardDir);
+    await shellExec("sudo src/script.sh moveFile " + tmpInterfaceDir + interface.name + ".conf " + wireguardDir);
 
     if (interface.enable) {
       await shellExec("sudo src/script.sh enableInterface " + interface.name);
@@ -157,8 +157,7 @@ exports.interfaceUpdatePost = async (req, res) => {
     }
 
     await shellExec("sudo src/script.sh disableInterface " + req.params.interfaceName);
-    await shellExec("sudo src/script.sh deleteFile " + wireguardDir+req.params.interfaceName+".conf");
-
+    await shellExec("sudo src/script.sh deleteFile " + wireguardDir + req.params.interfaceName + ".conf");
 
     db.get("interfaces").remove({ name: req.params.interfaceName }).write();
     db.get("interfaces")
@@ -183,7 +182,7 @@ exports.interfaceUpdatePost = async (req, res) => {
     fs.writeFileSync(tmpInterfaceDir + interface.name + ".conf", dotConf);
 
     // copy config file from temp dir to wireguard dir
-    await shellExec("sudo src/script.sh moveFile " +tmpInterfaceDir+ interface.name + ".conf " + wireguardDir);
+    await shellExec("sudo src/script.sh moveFile " + tmpInterfaceDir + interface.name + ".conf " + wireguardDir);
 
     if (interface.enable) {
       await shellExec("sudo src/script.sh enableInterface " + interface.name);
@@ -337,7 +336,7 @@ function interfaceToDotConf(interface) {
         conf += "\nAllowedIPs = " + peer.address;
       });
     }
-    conf+="\n";
+    conf += "\n";
     resolve(conf);
   });
 }
