@@ -47,6 +47,7 @@ case $ACTION in
     SOURCE=$2
     DESTINSTION=$3
     echo $(cp $2 $3)
+    echo $(rm $2)
     ;;
 
   deleteFile)
