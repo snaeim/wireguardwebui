@@ -137,6 +137,7 @@ function generatePeerConfig(privateKey, address, dns, interfacePublicKey, endpoi
   peerConfig = "[Interface]\nPrivateKey = " + privateKey;
   peerConfig += "\nAddress = " + address + "\nDNS = " + dns;
   peerConfig += "\n\n[Peer]\nPublicKey = " + interfacePublicKey;
+  peerConfig += "\nAllowedIPs = 0.0.0.0/0";
   peerConfig += "\nEndpoint = " + endpoint + ":" + port;
   return peerConfig;
 }
