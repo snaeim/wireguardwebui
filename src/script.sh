@@ -61,7 +61,7 @@ case $ACTION in
     INTERFACE_NAME=$2
     ADDRESS=$3
     wg set $INTERFACE_NAME peer $PUBLIC_KEY allowed-ips $ADDRESS
-    printf '\nPublicKey = %s\nAllowedIPs = %s\n' $PUBLIC_KEY $ADDRESS >> /etc/wireguard/$INTERFACE_NAME.conf
+    printf '\n[Peer]\nPublicKey = %s\nAllowedIPs = %s\n' $PUBLIC_KEY $ADDRESS >> /etc/wireguard/$INTERFACE_NAME.conf
     printf '{"privateKey":"%s","publicKey":"%s"}' $PRIVATE_KEY $PUBLIC_KEY
     ;;
   
@@ -70,7 +70,7 @@ case $ACTION in
     PUBLIC_KEY=$(wg pubkey <<< $PRIVATE_KEY)
     INTERFACE_NAME=$2
     ADDRESS=$3
-    printf '\nPublicKey = %s\nAllowedIPs = %s\n' $PUBLIC_KEY $ADDRESS >> /etc/wireguard/$INTERFACE_NAME.conf
+    printf '\n[Peer]\nPublicKey = %s\nAllowedIPs = %s\n' $PUBLIC_KEY $ADDRESS >> /etc/wireguard/$INTERFACE_NAME.conf
     printf '{"privateKey":"%s","publicKey":"%s"}' $PRIVATE_KEY $PUBLIC_KEY
     ;;
 
