@@ -3,6 +3,8 @@ const isCidr = require("is-cidr");
 const _ = require("lodash");
 const ini = require("ini");
 const fs = require("fs");
+const archiver = require("archiver");
+const bcrypt = require("bcrypt");
 
 const low = require("lowdb");
 const FileSync = require("lowdb/adapters/FileSync");
@@ -82,6 +84,10 @@ exports.interfaceDeactivate = async (req, res) => {
     const result = err;
     res.render("changeInterfaceStatus", { requestFor: "Activate", interfaceName: interfaceName, result: result });
   }
+};
+
+exports.interfaceExport = async (req, res) => {
+  res.render("export");
 };
 
 /**
@@ -224,6 +230,31 @@ exports.interfaceImportPost = async (req, res) => {
     res.render("interface", { action: "create", interface: interface });
   } catch (err) {
     res.render("import", { err: err });
+  }
+};
+
+exports.interfaceExportPost = async (req, res) => {
+  try {
+    var admin = db.get("admin").value();
+    if (admin.password && req.body.password && bcrypt.compareSync(req.body.password, admin.password)) {
+      db.read();
+      let interfaces = db.get("interfaces").value();
+      let exportFile = "./src/interfaces/wireguard-export.zip";
+      let exportFIleTemp = "./src/interfaces/wireguard-export1.zip";
+
+      // write archive file contain wireguard interfaces
+      await interfacesToArchive(interfaces, exportFile);
+
+      setTimeout(() => {
+        res.download(exportFile, "wireguard-export.zip", () => {
+          fs.unlinkSync(exportFile);
+        });
+      }, 500);
+    } else {
+      throw new Error("Wrong password!");
+    }
+  } catch (err) {
+    res.render("export", { err: err });
   }
 };
 
@@ -373,4 +404,36 @@ async function determineInterfaceStatus(interfaceList) {
 async function isActiveInterface(interfaceName) {
   let activeInterface = await getActiveInterface();
   return activeInterface.includes(interfaceName);
+}
+
+async function interfacesToArchive(interfaces, filename) {
+  return new Promise(async (resolve) => {
+    // create a file to stream archive data to.
+    const output = fs.createWriteStream(filename);
+
+    let archive = archiver("zip", {
+      zlib: { level: 9 }, // Sets the compression level.
+    });
+
+    archive.pipe(output);
+
+    archive = await writeInterfaces(interfaces, archive);
+
+    archive.finalize();
+
+    resolve(archive);
+  });
+}
+
+async function writeInterfaces(interfaces, archive) {
+  return new Promise(async (resolve) => {
+    let dotConf;
+
+    interfaces.forEach(async (interface) => {
+      dotConf = await interfaceToDotConf(interface);
+      archive.append(dotConf, { name: interface.name + ".conf" });
+    });
+
+    resolve(archive);
+  });
 }

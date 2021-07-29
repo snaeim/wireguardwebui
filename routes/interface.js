@@ -11,9 +11,11 @@ router.get("/delete/:interfaceName", interfaceController.interfaceDelete);
 router.get("/import", interfaceController.interfaceImport);
 router.get("/activate/:interfaceName", interfaceController.interfaceActivate);
 router.get("/deactivate/:interfaceName", interfaceController.interfaceDeactivate);
+router.get("/export", interfaceController.interfaceExport);
 
 router.post("/create", interfaceController.interfaceCreatePost);
 router.post("/edit/:interfaceName", interfaceController.interfaceUpdatePost);
 router.post("/import", multer({ storage: multer.memoryStorage() }).single("configFile"), interfaceController.interfaceImportPost);
+router.post("/export", interfaceController.interfaceExportPost)
 
 module.exports = router;

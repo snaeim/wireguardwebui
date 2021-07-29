@@ -1,0 +1,27 @@
+<%- include('header'); -%> <%- include('navbar'); -%>
+<section class="section">
+  <div class="container">
+    <div class="columns">
+      <div class="column is-offset-one-third is-one-third">
+        <article class="message is-primary is-small">
+          <div class="message-body">Enter password to download file.</div>
+        </article>
+        <% if (locals.err) { %>
+        <article class="message is-danger is-small">
+          <div class="message-body"><%= err %></div>
+        </article>
+        <% } %>
+        <form class="box" method="POST" action="">
+          <div class="field">
+            <label class="label">Password</label>
+            <div class="control">
+              <input class="input" type="password" name="password" placeholder="********" required />
+            </div>
+          </div>
+          <button class="button is-primary">Download</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+<%- include('footer'); -%>
