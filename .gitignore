@@ -65,3 +65,6 @@ src/db.json
 
 # mac os folder
 .DS_Store
+
+# vscode workspace
+.vscode
